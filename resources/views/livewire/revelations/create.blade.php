@@ -9,6 +9,7 @@ $store = function () {
 	$validated = $this->validate();
 	auth()->user()->revelations()->create($validated);
 	$this->message = '';
+	$this->dispatch('revelation-revealed');
 };
 
 ?>
