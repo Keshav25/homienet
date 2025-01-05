@@ -5,10 +5,21 @@ use function Livewire\Volt\{on, state};
 
 $getRevelations = fn () => $this->revelations = Revelation::with('user')->latest()->get(); 
 
- 
+$disableEditing = function() {
+	$this->editing = null;
+	return $this->getRevelations();
+};
 
-state(['revelations' => $getRevelations]);
-on(['revelations-revealed' => $getRevelations]); 
+state(['revelations' => $getRevelations, 'editing' => null]);
+on(['revelations-revealed' => $getRevelations,
+	'revelation-revised' => $disableEditing,
+	'revelation-revision-abandoned' => $disableEditing,
+]);
+
+	$edit = function (Revelation $revelation) {
+		$this->editing = $revelation;
+		$this->getRevelations();
+	}
 ?>
 
 <div>
@@ -23,9 +34,37 @@ on(['revelations-revealed' => $getRevelations]);
           <div>
             <span class="text-gray-800">{{ $revelation->user->name }}</span>
             <small class="ml-2 text-sm text-gray-600">{{ $revelation->created_at->format('j M Y, g:i a') }}</small>
+			@unless ($revelation->created_at->eq($revelation->updated_at))
+            <small class="text-sm text-gray-600"> &middot; {{ __('edited') }}</small>
+            @endunless
           </div>
+		  @if ($revelation->user->is(auth()->user()))
+          <x-dropdown>
+            <x-slot name="trigger">
+              <button>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+              </button>
+            </x-slot>
+            <x-slot name="content">
+              <x-dropdown-link wire:click="edit({{ $revelation->id }})">
+                {{ __('Edit') }}
+              </x-dropdown-link>
+            </x-slot>
+          </x-dropdown>
+          @endif
         </div>
         <p class="mt-4 text-lg text-gray-900">{{ $revelation->message }}</p>
+		@if ($revelation->is($editing)) 
+
+        <livewire:revelations.edit :revelation="$revelation" :key="$revelation->id" />
+
+        @else
+
+        <p class="mt-4 text-lg text-gray-900">{{ $revelation->message }}</p>
+
+        @endif 
       </div>
     </div>
     @endforeach 
