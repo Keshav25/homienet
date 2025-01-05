@@ -15,11 +15,16 @@ on(['revelations-revealed' => $getRevelations,
 	'revelation-revised' => $disableEditing,
 	'revelation-revision-abandoned' => $disableEditing,
 ]);
+$edit = function (Revelation $revelation) {
+	$this->editing = $revelation;
+	$this->getRevelations();
+};
 
-	$edit = function (Revelation $revelation) {
-		$this->editing = $revelation;
-		$this->getRevelations();
-	}
+$delete = function (Revelation $revelation) {
+	$this->authorize('delete', $revelation);
+	$revelation->delete();
+	$this->getRevelations();
+}
 ?>
 
 <div>
@@ -51,11 +56,13 @@ on(['revelations-revealed' => $getRevelations,
               <x-dropdown-link wire:click="edit({{ $revelation->id }})">
                 {{ __('Edit') }}
               </x-dropdown-link>
-            </x-slot>
+			  <x-dropdown-link wire:click="delete({{ $revelation->id }})" wire:confirm="are you sure you want to abandon your revelation?">
+				{{ __('Delete') }}
+			  </x-dropdown-link>
+			</x-slot>
           </x-dropdown>
           @endif
         </div>
-        <p class="mt-4 text-lg text-gray-900">{{ $revelation->message }}</p>
 		@if ($revelation->is($editing)) 
 
         <livewire:revelations.edit :revelation="$revelation" :key="$revelation->id" />

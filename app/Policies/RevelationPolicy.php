@@ -45,7 +45,7 @@ class RevelationPolicy
      */
     public function delete(User $user, Revelation $revelation): bool
     {
-        return false;
+        return $this->update($user, $revelation);
     }
 
     /**
